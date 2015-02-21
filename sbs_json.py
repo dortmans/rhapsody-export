@@ -32,10 +32,12 @@ def tokenize_line(tokenstream, line):
             if right[0] == '{':
                 tokenstream.append('{')
                 tokenstream.append(right[1:].strip())
-            elif right[0] == ';':
-                tokenstream.append('""')
+            #elif right[0] == ';':
+            #    tokenstream.append('""')
+            #else:
+            #    tokenstream.append(right.strip('; '))
             else:
-                tokenstream.append(right.strip('; '))
+                tokenstream.append(right)
         else:
             pass # continued on next line
     elif line[0] == '}':
@@ -92,8 +94,16 @@ def parse_value(tokenstream):
             token = tokenstream.pop(0)
         tokenstream.insert(0,token)
     else:
-        # or just a simple value
-        value = token
+        # or just a list of values
+        parts = token.split('"')
+        if len(parts) == 1:
+            value = [x.strip() for x in token.split(";")[:-1]]
+        else:
+            value = parts[1]
+        #value = [x.strip() for x in token.split(";")[:-1]]
+
+        if len(value) == 1:
+            value = value[0]
     return value
 
 def parse_comment(tokenstream):
