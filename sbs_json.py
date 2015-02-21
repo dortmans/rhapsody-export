@@ -4,26 +4,26 @@
 Rhapsody SBS file processing.
 """
 
-import os, argparse, re, json
+import os, argparse, json
 
 
 def tokenize(text):
     tokenstream = []
     for i, line in enumerate(text):
         line_stripped = line.strip()
-        if line_stripped == '': break
-        # print i, line
-        tokenize_line(tokenstream, line_stripped)
+        if line_stripped != '':
+            tokenize_line(tokenstream, line_stripped)
     return tokenstream
 
 
 def tokenize_line(tokenstream, line):
-    line = line.strip(';')
-    if line[0] == '{': # object open
+    if line[0] == '{':
+         # object open
         tokenstream.append('{')
         tokenstream.append(line[1:].strip())
-    elif line[0] == '-': # property
-        assignment = re.split(' =', line[2:])
+    elif line[0] == '-':
+        # property
+        assignment = line[1:].split('=',1)
         left = assignment[0].strip()
         tokenstream.append('=')
         tokenstream.append(left)
@@ -32,17 +32,22 @@ def tokenize_line(tokenstream, line):
             if right[0] == '{':
                 tokenstream.append('{')
                 tokenstream.append(right[1:].strip())
+            elif right[0] == ';':
+                tokenstream.append('""')
             else:
-                tokenstream.append(right)
+                tokenstream.append(right.strip('; '))
         else:
             pass # continued on next line
-    elif line[0] == '}': # object close
+    elif line[0] == '}':
+        # object close
         tokenstream.append('}')
     else:
-        if not tokenstream:  # first line
+        if not tokenstream:
+            # first line
             tokenstream.append(line)
-        else:  # remainder of previous line
-            tokenstream[-1] += line
+        else:
+            # remainder of previous line
+            tokenstream[-1] += line.strip(';')
 
 
 def parse(tokenstream):
@@ -55,44 +60,41 @@ def parse(tokenstream):
 
 
 def parse_object(tokenstream):
-    print "BEGIN_OF_OBJECT"
     type = tokenstream.pop(0)
     properties = parse_properties(tokenstream)
-    object = type, properties
-    print "END_OF_OBJECT"
+    object = {type:properties}
     return object
 
 
 def parse_properties(tokenstream):
-    print "BEGIN_OF_PROPERTIES"
-    properties = {}
+    properties = []
     token = tokenstream.pop(0)
     while token != '}':
-        if token != '=': raise Exception("UNEXPECTED TOKEN:", token)
-        key = tokenstream.pop(0)
-        value = parse_value(tokenstream)
-        print key, "=", value
-        properties[key] = value
+        if token == '=':
+            key = tokenstream.pop(0)
+            value = parse_value(tokenstream)
+            properties.append({key:value})
+        elif token == '{':
+            properties.append(parse_object(tokenstream))
+        else:
+            raise Exception("ERROR: Unexpected token in parse_properties: ",token)
         token = tokenstream.pop(0)
-    print "END_OF_PROPERTIES"
     return properties
 
 
 def parse_value(tokenstream):
     token = tokenstream.pop(0)
-    # TODO: empty value like in - m_pParent = ;
-    if token != '{':
-        # simple value
-        value = token
-    else:
-        # list of objects
+    if token == '{':
+        # value is list of objects
         value = []
         while token == '{':
-            value = parse_object(tokenstream)
+            value.append(parse_object(tokenstream))
             token = tokenstream.pop(0)
-        tokenstream.insert(0,token) # push back token
+        tokenstream.insert(0,token)
+    else:
+        # or just a simple value
+        value = token
     return value
-
 
 def parse_comment(tokenstream):
     return tokenstream.pop(0)
@@ -101,9 +103,9 @@ def parse_comment(tokenstream):
 def sbs_load(sbs_file):
     text = sbs_file.readlines()
     tokenstream = tokenize(text)
-    print tokenstream
+    # print tokenstream
     sbs = parse(tokenstream)
-    print sbs
+    # print sbs
     return sbs
 
 
