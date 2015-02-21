@@ -1,8 +1,11 @@
 #!/usr/bin/env python
-"""Python example.
+"""sbs_json.py; Read Rhapsody archive file and write equivalent .json file
 
-Rhapsody SBS file processing.
+argument: filepath of a Rhapsody archive file
 """
+
+__author__ = "Eric Dortmans"
+__copyright__ = "Copyright 2015, Eric Dortmans"
 
 import os, argparse, json
 
@@ -32,10 +35,6 @@ def tokenize_line(tokenstream, line):
             if right[0] == '{':
                 tokenstream.append('{')
                 tokenstream.append(right[1:].strip())
-            #elif right[0] == ';':
-            #    tokenstream.append('""')
-            #else:
-            #    tokenstream.append(right.strip('; '))
             else:
                 tokenstream.append(right)
         else:
@@ -55,10 +54,17 @@ def tokenize_line(tokenstream, line):
 def parse(tokenstream):
     # Parse the sbs tokenstream
     sbs = []
-    sbs.append(parse_comment(tokenstream))
-    tokenstream.pop(0)
-    sbs.append(parse_object(tokenstream))
+    sbs.append(parse_header(tokenstream))
+
+    if tokenstream.pop(0) == '{':
+        sbs.append(parse_object(tokenstream))
+    else:
+        raise Exception("ERROR: Unexpected token in 'parse': ",token)
     return sbs
+
+
+def parse_header(tokenstream):
+    return tokenstream.pop(0)
 
 
 def parse_object(tokenstream):
@@ -69,17 +75,20 @@ def parse_object(tokenstream):
 
 
 def parse_properties(tokenstream):
-    properties = []
+    #properties = []
+    properties = {}
     token = tokenstream.pop(0)
     while token != '}':
         if token == '=':
             key = tokenstream.pop(0)
             value = parse_value(tokenstream)
-            properties.append({key:value})
+            #properties.append({key:value})
+            properties.update({key:value})
         elif token == '{':
-            properties.append(parse_object(tokenstream))
+            #properties.append(parse_object(tokenstream))
+            properties.update(parse_object(tokenstream))
         else:
-            raise Exception("ERROR: Unexpected token in parse_properties: ",token)
+            raise Exception("ERROR: Unexpected token in 'parse_properties': ",token)
         token = tokenstream.pop(0)
     return properties
 
@@ -93,6 +102,9 @@ def parse_value(tokenstream):
             value.append(parse_object(tokenstream))
             token = tokenstream.pop(0)
         tokenstream.insert(0,token)
+        if len(value) == 1:
+            # or just one object
+            value = value[0]
     else:
         # or just a list of values
         parts = token.split('"')
@@ -100,15 +112,10 @@ def parse_value(tokenstream):
             value = [x.strip() for x in token.split(";")[:-1]]
         else:
             value = parts[1]
-        #value = [x.strip() for x in token.split(";")[:-1]]
-
         if len(value) == 1:
+            # or just one value
             value = value[0]
     return value
-
-def parse_comment(tokenstream):
-    return tokenstream.pop(0)
-
 
 def sbs_load(sbs_file):
     text = sbs_file.readlines()
@@ -132,7 +139,7 @@ def sbs_to_json(sbs_file, compressed):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Read .sbs file and write equivalent .json file')
+    parser = argparse.ArgumentParser(description='Read Rhapsody archive  file and write equivalent .json file')
     parser.add_argument('-c', '--c', action='store_true', help='compressed json output')
     parser.add_argument('sbs_file', help='The .sbs file to convert')
     args = parser.parse_args()
