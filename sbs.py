@@ -6,7 +6,7 @@
 __author__ = "Eric Dortmans"
 __copyright__ = "Copyright 2015, Eric Dortmans"
 
-import sys, os, argparse, yaml
+import sys, os, argparse, re
 
 
 def tokenize(text):
@@ -47,7 +47,8 @@ def tokenize_line(tokenstream, line):
             tokenstream.append(line)
         else:
             # remainder of previous line
-            tokenstream[-1] += line.strip(';')
+            # tokenstream[-1] += '\\n'
+            tokenstream[-1] += line.strip('')
 
 
 def parse(tokenstream):
@@ -63,7 +64,7 @@ def parse_header(tokenstream):
     token = tokenstream.pop(0)
     tag = token[:19]
     if tag != 'I-Logix-RPY-Archive':
-        raise Exception("ERROR: Wrong file tag: {}".format(tag))
+        raise Exception("ERROR: Wrong file header tag: {}".format(tag))
     return token
 
 
@@ -82,10 +83,10 @@ def parse_properties(tokenstream):
         if token == '=':
             key = tokenstream.pop(0)
             value = parse_value(tokenstream)
-            #properties.append({key:value})
+            # properties.append({key:value})
             properties.update({key: value})
         elif token == '{':
-            #properties.append(parse_object(tokenstream))
+            # properties.append(parse_object(tokenstream))
             properties.update(parse_object(tokenstream))
         else:
             raise Exception("ERROR: Unexpected token': {}".format(token))
@@ -106,14 +107,14 @@ def parse_value(tokenstream):
             # or just one object
             value = value[0]
     else:
-        # or just a list of values
+        # or a list of values
         parts = token.split('"')
-        if len(parts) == 1:
-            value = [x.strip() for x in token.split(";")[:-1]]
+        if parts[-1].strip() == ';':
+            value = '"'.join(parts[1:-1])
         else:
-            value = parts[1]
+            value = [x.strip() for x in token.split(";")[:-1]]
         if len(value) == 1:
-            # or just one value
+            # or a single value
             value = value[0]
     return value
 
