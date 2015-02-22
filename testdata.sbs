@@ -1,0 +1,29 @@
+I-Logix-RPY-Archive version 8.7.1 * 5066837
+{ CGEMdiWorkspace
+    - _UserColors = { IRPYRawContainer
+		- size = 3;
+		- value = 16777215; 16777215; 16777215;
+	}
+    - _fullName = "C:\\Users\\someone\\Desktop\\SomeModel";
+	- frameset = "<frameset rows=50%,50%>
+<frame name=ReactionsCompartment>
+<frame name=StructureCompartment>";
+	- m_style = "Arial" 10 0 0 0 1 ;
+	- myViewsWithID = { IRPYRawContainer
+        - size = 1;
+		- value =
+		{ CGEMdiDiagramParams
+            - _DownRight = 673 399 ;
+            - _body = "
+OUT_PORT(p1)->GEN(evStiffen);
+OUT_PORT(p6)->GEN(evStiffen);";
+			- _instanceName = "";
+			- _theDiagram = { IHandle
+				- _id = GUID f87bcc2d-d0f6-4654-acc0-e593e1378581;
+			}
+			- m_str = "[movinglegs==0]/
+cout << \"Legs Down\" << endl;";
+		}
+	}
+
+}
