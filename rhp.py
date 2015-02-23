@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-"""sbs.py; parse Rhapsody archive file
+"""rhp.py; parse Rhapsody archive file
 
 """
 
 __author__ = "Eric Dortmans"
 __copyright__ = "Copyright 2015, Eric Dortmans"
 
-import sys, os, argparse, re
+import sys, os, argparse
 
 
 def tokenize(text):

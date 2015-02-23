@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-"""sbs_json.py; Read Rhapsody archive file and write as .json file
+"""rhp_json.py; Read Rhapsody archive file and write as .json file
 
 """
 
 __author__ = "Eric Dortmans"
 __copyright__ = "Copyright 2015, Eric Dortmans"
 
-import sys, os, argparse, sbs, json
+import sys, os, argparse, rhp, json
 
 
-def sbs_to_json(sbs_file, json_file, compressed):
+def rhp_to_json(rhp_file, json_file, compressed):
     try:
-        data = sbs.load(file(sbs_file, 'r'))
+        data = rhp.load(file(rhp_file, 'r'))
     except IOError, e:
         print e
         sys.exit(1)
@@ -27,13 +27,13 @@ def sbs_to_json(sbs_file, json_file, compressed):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Read Rhapsody archive file and write equivalent .json file')
     parser.add_argument('-c', '--c', action='store_true', help='compressed json output')
-    parser.add_argument('sbs_file', help='Rhapsody archive filepath')
+    parser.add_argument('rhp_file', help='Rhapsody archive filepath')
     parser.add_argument('json_file', nargs='?', help='json filepath')
     args = parser.parse_args()
-    sbs_file = args.sbs_file
+    rhp_file = args.rhp_file
     if args.json_file == None:
-        json_file = os.path.splitext(args.sbs_file)[0] + '.json'
+        json_file = os.path.splitext(args.rhp_file)[0] + '.json'
     else:
         json_file = args.json_file
 
-    sbs_to_json(sbs_file, json_file, args.c)
+    rhp_to_json(rhp_file, json_file, args.c)
