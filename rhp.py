@@ -47,7 +47,7 @@ def tokenize_line(tokenstream, line):
             tokenstream.append(line)
         else:
             # remainder of previous line
-            # tokenstream[-1] += '\\n'
+            tokenstream[-1] += '\\n'
             tokenstream[-1] += line.strip('')
 
 
