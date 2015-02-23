@@ -6,68 +6,51 @@
 __author__ = "Eric Dortmans"
 __copyright__ = "Copyright 2015, Eric Dortmans"
 
-import sys, os, argparse, rhp, xml
+import sys, os, argparse, rhp
+from xml.dom.minidom import Document
 
-def data2xml(data, default_flow_style, indent):
-    root_tag = 'rhp'
+doc = Document()
+
+def data2xml(data):
+    root_tag = 'I-Logix-RPY-Archive'
     header_tag = 'description'
-    indent_level = 0
-    xml_string = ''
-    xml_string += '\n' + ' '*indent*indent_level
-    xml_string += '<{}>'.format(root_tag)
-    # header
-    xml_string += value2xml(header_tag, data[0], indent, indent_level+1)
-    # content
-    xml_string += dict2xml(data[1], indent, indent_level+1)
-    xml_string += '\n' + ' '*indent*indent_level
-    xml_string += '</{}>'.format(root_tag)
-    return xml_string
+    root = doc.createElement(root_tag)
+    root.setAttribute(header_tag, data[0])
+    doc.appendChild(root)
+    dict2xml(data[1], root)
+    return doc
 
-
-def dict2xml(the_dict, indent, indent_level):
-    xml_string = ''
+def dict2xml(the_dict, parent):
     for key, value in the_dict.items():
-        item = {}
-        xml_string += item2xml(key, value, indent, indent_level)
-    return xml_string
+        item2xml(key, value, parent)
 
-def item2xml(the_key, the_value, indent, indent_level):
-    xml_string = ''
-
+def item2xml(the_key, the_value, parent):
     if type(the_value) is dict:
-        xml_string += '\n' + ' '*indent*indent_level
-        xml_string += '<{}>'.format(the_key)
-        xml_string += dict2xml(the_value, indent, indent_level+1)
-        xml_string += '\n' + ' '*indent*indent_level
-        xml_string += '</{}>'.format(the_key)
+        child = doc.createElement(the_key)
+        parent.appendChild(child)
+        dict2xml(the_value, child)
     elif type(the_value) is list:
         for value in the_value:
-            xml_string += value2xml(the_key, value, indent, indent_level+1)
+            value2xml(the_key, value, parent)
+    else: # it must be a single value
+        value2xml(the_key, the_value, parent)
+
+def value2xml(the_tag, the_value, parent):
+    child = doc.createElement(the_tag)
+    parent.appendChild(child)
+    if type(the_value) is dict:
+        dict2xml(the_value, child)
     else:
-        # it must be a single value
-        xml_string += value2xml(the_key, the_value, indent, indent_level+1)
+        child_content = doc.createTextNode(str(the_value))
+        child.appendChild(child_content)
 
-    return xml_string
-
-def value2xml(the_tag, the_value, indent, indent_level):
-    xml_string = ''
-    xml_string += '\n' + ' '*indent*indent_level
-    xml_string += '<{}>'.format(the_tag)
-
-    xml_string += '\n' + ' '*indent*(indent_level+1)
-    xml_string += the_value
-
-    xml_string += '\n' + ' '*indent*indent_level
-    xml_string += '</{}>'.format(the_tag)
-    return xml_string
-
-
-def xml_dump(data, the_file, default_flow_style=False, indent=4):
-    # TODO: Use ElementTree
+def xml_dump(data, the_file, pretty=True, indent=4):
     if indent == None:
         indent = 0
-    xml_string = data2xml(data, default_flow_style=default_flow_style, indent=indent)
-    print xml_string
+    if pretty:
+        xml_string = data2xml(data).toprettyxml(indent=' '*indent, encoding='utf-8')
+    else:
+        xml_string = data2xml(data).toxml(encoding='utf-8')
     the_file.write(xml_string)
 
 def rhp_to_xml(rhp_file, xml_file, compressed):
@@ -78,11 +61,11 @@ def rhp_to_xml(rhp_file, xml_file, compressed):
         sys.exit(1)
     if compressed:
         indent = None
-        default_flow_style = True
+        pretty = False
     else:
         indent = 2
-        default_flow_style = False
-    xml_dump(data, file(xml_file, 'w'), default_flow_style=default_flow_style, indent=indent)
+        pretty = True
+    xml_dump(data, file(xml_file, 'w'), pretty=pretty, indent=indent)
 
 
 if __name__ == "__main__":

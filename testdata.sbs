@@ -10,7 +10,7 @@ I-Logix-RPY-Archive version 8.7.1 * 5066837
 <frame name=StructureCompartment>";
 	- m_style = "Arial" 10 0 0 0 1 ;
 	- myViewsWithID = { IRPYRawContainer
-        - size = 1;
+        - size = 2;
 		- value =
 		{ CGEMdiDiagramParams
             - _DownRight = 673 399 ;
@@ -24,6 +24,11 @@ OUT_PORT(p6)->GEN(evStiffen);";
 			- m_str = "[movinglegs==0]/
 cout << \"Legs Down\" << endl;";
 		}
+		{ IProperty
+			- _Name = "DefaultSize";
+			- _Value = "0,34,84,148";
+		}
+
 	}
 
 }
